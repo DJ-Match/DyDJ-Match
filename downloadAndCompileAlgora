@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+########################################################################
+# Copyright (C) 2023 : Kathrin Hanauer, Lara Ost                       #
+#                                                                      #
+# This file is part of DyDJMatch and licensed under GPLv3.             #
+########################################################################
+
+set -e
+
+if ! [ -d Algora ]
+then
+	echo "Script must be run from the toplevel directory."
+	exit 1
+fi
+
+cd Algora
+
+if [ -d AlgoraCore ]
+then
+	echo "Algora/AlgoraCore already exists."
+else
+  git clone https://gitlab.com/libalgora/AlgoraCore
+	cd AlgoraCore && ./easyCompile && cd ..
+fi
+
+if [ -d AlgoraDyn ]
+then
+	echo "Algora/AlgoraDyn already exists."
+else
+	git clone https://gitlab.com/libalgora/AlgoraDyn
+	cd AlgoraDyn && ./easyCompile && cd ..
+fi
+
+cd ..

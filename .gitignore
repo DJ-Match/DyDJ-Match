@@ -1,0 +1,5 @@
+/build/*
+/Algora/AlgoraCore
+/Algora/AlgoraDyn
+/src/algoraapp_info.h
+/examples/*.graph

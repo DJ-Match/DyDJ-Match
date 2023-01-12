@@ -1,0 +1,88 @@
+#!/bin/bash
+
+########################################################################
+# Copyright (C) 2022-2023 : Kathrin Hanauer, Lara Ost                  #
+#                                                                      #
+# This file is part of DyDJ Match.                                     #
+########################################################################
+
+set -e
+
+CLEAN=0
+CMAKE=""
+EXTRA_ARGS=""
+MAKE="make"
+
+function usage() {
+    echo "Usage: $0 [ -c | --clean ] [ -C | --compiler <c++-compiler c-compiler> ] [ --cmake ] [ -n | --ninja ]"
+}
+
+while [[ $# -gt 0 ]]
+do
+case $1 in
+    -c|--clean)
+    CLEAN=1
+    shift
+    ;;
+    -C|--compiler)
+    EXTRA_ARGS="${EXTRA_ARGS} -D CMAKE_CXX_COMPILER=$2 -D CMAKE_C_COMPILER=$3"
+    shift
+    shift
+    ;;
+    --cmake)
+    CMAKE=$2
+    shift
+    shift
+    ;;
+    -n|--ninja)
+    EXTRA_ARGS="${EXTRA_ARGS} -G Ninja"
+    MAKE="ninja"
+    shift
+    ;;
+    -h|--help)
+    usage
+    exit 0
+    ;;
+    --)
+    shift
+    break
+    ;;
+    *)
+    echo "Ignoring unknown option $1. Run $0 -h for help."
+    shift
+    ;;
+esac
+done
+
+[ -z "${CMAKE}" ] && CMAKE=$(which cmake 2>/dev/null) && echo "Using \"${CMAKE}\" for \"cmake\"."
+[ -n "${CMAKE}" ] || eval 'echo "Binary \"cmake\" not found. Please specify its location explicitly via --cmake <path/to/cmake>." 1>&2; exit 1'
+[ -x "${CMAKE}" ] || eval 'echo "\"${CMAKE}\" is not an executable. Please specify the location of the cmake binary explicitly via --cmake <path/to/cmake>." 1>&2; exit 1'
+
+CMAKE_ARGS="${EXTRA_ARGS} $@"
+
+CUR_DIR=$(pwd)
+BUILD_DIR="${CUR_DIR}/build"
+BUILD_DIR_DEBUG="${BUILD_DIR}/Debug"
+BUILD_DIR_RELEASE="${BUILD_DIR}/Release"
+
+if [ "${CLEAN}" -gt 0 ]
+then
+  echo "Removing build directory as requested..."
+  rm -rf ${BUILD_DIR}
+fi
+
+echo "Creating build paths if necessary..."
+mkdir -p "${BUILD_DIR_DEBUG}"
+mkdir -p "${BUILD_DIR_RELEASE}"
+
+NUMCORES=$(grep '^core id' /proc/cpuinfo | sort -u | wc -l)
+
+echo "Compiling debug version..."
+cd "${BUILD_DIR_DEBUG}"
+${CMAKE} ${CMAKE_ARGS} -D CMAKE_BUILD_TYPE=Debug ${CUR_DIR} && ${MAKE} -C ${BUILD_DIR_DEBUG} -j $NUMCORES
+
+echo "Compiling release version..."
+cd "${BUILD_DIR_RELEASE}"
+${CMAKE} ${CMAKE_ARGS} -D CMAKE_BUILD_TYPE=Release ${CUR_DIR} && ${MAKE} -C ${BUILD_DIR_RELEASE} -j $NUMCORES
+
+cd "${CUR_DIR}"
