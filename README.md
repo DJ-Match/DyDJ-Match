@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/588305040.svg)](https://zenodo.org/badge/latestdoi/588305040)
+
 # DyDJ Match
 
 **DyDJ Match** implements a number of different algorithms to solve the **k-Disjoint Matchings**
